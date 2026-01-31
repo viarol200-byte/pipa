@@ -179,6 +179,26 @@ body {
     background-clip: text;
 }
 
+.settings-btn {
+    margin-left: auto;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.settings-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-color);
+    color: var(--text-primary);
+}
+
 /* Chat Container */
 .chat-container {
     flex: 1;
@@ -737,6 +757,10 @@ body {
 
     .mobile-menu-btn {
         display: flex;
+    }
+
+    .settings-btn {
+        display: none;
     }
 
     .chat-header {
