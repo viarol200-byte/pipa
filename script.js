@@ -1,12 +1,28 @@
 // DeepSeek Chat with OpenRouter
 // === КОНФИГУРАЦИЯ ===
-const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'tngtech/deepseek-r1t2-chimera:free';
 
-// Получаем API ключ
+// Получаем API ключ из localStorage
 function getApiKey() {
-    return OPENROUTER_API_KEY;
+    return localStorage.getItem('deepseek_api_key') || '';
+}
+
+function setApiKey(key) {
+    localStorage.setItem('deepseek_api_key', key);
+}
+
+function hasApiKey() {
+    return !!getApiKey();
+}
+
+function resetApiKey() {
+    localStorage.removeItem('deepseek_api_key');
+    if (apiKeyInput) {
+        apiKeyInput.value = '';
+        apiKeyInput.disabled = false;
+    }
+    checkApiKey();
 }
 
 // API Key Modal Elements
@@ -14,12 +30,16 @@ const apiKeyModal = document.getElementById('api-key-modal');
 const apiKeyInput = document.getElementById('api-key-input');
 const saveApiKeyBtn = document.getElementById('save-api-key-btn');
 
-// Скрываем модал если есть ключ
+// Показываем модал если нет ключа
 function checkApiKey() {
-    if (apiKeyModal) {
+    if (!hasApiKey() && apiKeyModal) {
+        apiKeyModal.classList.add('active');
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+    } else if (apiKeyModal) {
         apiKeyModal.classList.remove('active');
         messageInput.disabled = false;
-        sendBtn.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
     }
 }
 
@@ -30,6 +50,7 @@ function handleSaveApiKey() {
         setApiKey(key);
         apiKeyModal.classList.remove('active');
         messageInput.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
         showToast('API ключ сохранен!');
     } else {
         showToast('Введите корректный API ключ (начинается с sk-)');
@@ -38,14 +59,32 @@ function handleSaveApiKey() {
 
 // Event listeners для API key modal
 if (saveApiKeyBtn) {
-    saveApiKeyBtn.addEventListener('click', () => {
-        apiKeyModal.classList.remove('active');
-        showToast('API ключ встроен в код');
-    });
+    saveApiKeyBtn.addEventListener('click', handleSaveApiKey);
 }
 if (apiKeyInput) {
-    apiKeyInput.value = 'sk-or-v1-... (встроен)';
-    apiKeyInput.disabled = true;
+    apiKeyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleSaveApiKey();
+        }
+    });
+}
+
+// Settings button - opens API key modal
+const settingsBtn = document.getElementById('settings-btn');
+if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+        if (apiKeyModal) {
+            apiKeyModal.classList.add('active');
+        }
+    });
+}
+
+// Reset API key button
+const resetApiKeyBtn = document.getElementById('reset-api-key-btn');
+if (resetApiKeyBtn) {
+    resetApiKeyBtn.addEventListener('click', () => {
+        resetApiKey();
+    });
 }
 
 // System prompt (hidden from user)
@@ -370,6 +409,7 @@ async function fetchAIResponse() {
         
         if (errorMsg.includes('User not found') || errorMsg.includes('invalid')) {
             // API key is invalid, prompt user to update
+            localStorage.removeItem('deepseek_api_key');
             showToast('API ключ недействителен. Пожалуйста, введите новый ключ.');
             checkApiKey();
         }
